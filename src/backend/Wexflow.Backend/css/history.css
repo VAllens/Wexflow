@@ -1,4 +1,7 @@
 ﻿body {
+    background: #FFFFFF;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 12px;
 }
 
 #header {
@@ -6,29 +9,34 @@
     top: 0;
     right: 0;
     left: 0;
-    height: 90px;
+    height: 43px;
     background: #29A85C;
     color: #FFFFFF;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
 }
 
     #header a {
         color: #FFFFFF;
-        font-size: 25px;
+        font-size: 12px;
         margin: 20px;
         float: left;
+        font-weight: bold;
+        -webkit-font-smoothing: antialiased;
+        line-height: 5px;
+        white-space: nowrap;
     }
 
     #header .header-right {
         float: right;
     }
 
-    #header #lnk-manager, #lnk-designer, #lnk-users {
+    #header #lnk-manager, #lnk-designer, #lnk-approval, #lnk-users, #lnk-profiles {
         display: none;
     }
 
 #entries-action {
     position: absolute;
-    top: 110px;
+    top: 55px;
     right: 0;
     left: 5px;
     display: none;
@@ -55,12 +63,21 @@
 
 #entries {
     position: absolute;
-    top: 150px;
+    top: 90px;
     right: 0;
     left: 10px;
     bottom: 0;
     overflow: auto;
     display: none;
+}
+
+#entries .thead-dark {
+    background: #272727;
+    color: #EEEEEE;
+}
+
+#entries tbody tr:hover{
+    background: #EEEEEE;
 }
 
     #entries #entries-table .status {
@@ -88,7 +105,7 @@
     }
 
     #entries #entries-table tr:hover {
-        cursor: default;
+        cursor: pointer;
     }
 
     #entries #entries-table th:hover {

@@ -1,5 +1,4 @@
 ﻿using System;
-using LiteDB;
 
 namespace Wexflow.Core.Db
 {
@@ -11,7 +10,8 @@ namespace Wexflow.Core.Db
         Failed,
         Warning,
         Disabled,
-        Stopped
+        Stopped,
+        Disapproved
     }
 
     public enum LaunchType
@@ -24,13 +24,20 @@ namespace Wexflow.Core.Db
 
     public class Entry
     {
-        [BsonId]
-        public int Id { get; set; }
+        public static readonly string DocumentName = "entries";
+
         public int WorkflowId { get; set; }
         public string Name { get; set; }
         public LaunchType LaunchType { get; set; }
         public string Description { get; set; }
         public Status Status { get; set; }
         public DateTime StatusDate { get; set; }
+        public string Logs { get; set; }
+
+        public virtual string GetDbId()
+        {
+            return "-1";
+        }
+
     }
 }

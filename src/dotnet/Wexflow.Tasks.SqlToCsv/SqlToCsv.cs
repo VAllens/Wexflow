@@ -12,6 +12,7 @@ using System.Threading;
 using System.Xml.Linq;
 using Teradata.Client.Provider;
 using Wexflow.Core;
+using System.Data.Odbc;
 
 namespace Wexflow.Tasks.SqlToCsv
 {
@@ -23,19 +24,21 @@ namespace Wexflow.Tasks.SqlToCsv
         MySql,
         Sqlite,
         PostGreSql,
-        Teradata
+        Teradata,
+        Odbc
     }
 
     public class SqlToCsv : Task
     {
-        public Type DbType { get; set; }
-        public string ConnectionString { get; set; }
-        public string SqlScript { get; set; }
-        public string Separator { get; set; }
-        public string QuoteString { get; set; }
-        public string EndOfLine { get; set; }
-        public bool Headers { get; set; }
-        public bool SingleRecordHeaders{ get; set; }
+        public Type DbType { get; }
+        public string ConnectionString { get; }
+        public string SqlScript { get; }
+        public string Separator { get; }
+        public string QuoteString { get; }
+        public string EndOfLine { get; }
+        public bool Headers { get; }
+        public bool SingleRecordHeaders{ get; }
+        public bool DoNotGenerateFilesIfEmpty { get; }
 
         public SqlToCsv(XElement xe, Workflow wf)
             : base(xe, wf)
@@ -44,12 +47,11 @@ namespace Wexflow.Tasks.SqlToCsv
             ConnectionString = GetSetting("connectionString");
             SqlScript = GetSetting("sql", string.Empty);
             QuoteString = GetSetting("quote", string.Empty);
-            EndOfLine = "\r\n";
+            EndOfLine = GetSetting("endline", "\r\n");
             Separator = QuoteString + GetSetting("separator", ";") + QuoteString;
-            bool result1;
-            if (bool.TryParse(GetSetting("headers", bool.TrueString), out result1)) Headers = result1;
-            bool result2;
-            if (bool.TryParse(GetSetting("singlerecordheaders", bool.TrueString), out result2)) SingleRecordHeaders = result2;
+            if (bool.TryParse(GetSetting("headers", bool.TrueString), out var result1)) Headers = result1;
+            if (bool.TryParse(GetSetting("singlerecordheaders", bool.TrueString), out var result2)) SingleRecordHeaders = result2;
+            DoNotGenerateFilesIfEmpty = bool.Parse(GetSetting("doNotGenerateFilesIfEmpty", "false"));
         }
 
         public override TaskStatus Run()
@@ -168,6 +170,13 @@ namespace Wexflow.Tasks.SqlToCsv
                         ConvertToCsv(connection, command);
                     }
                     break;
+                case Type.Odbc:
+                    using (var connection = new OdbcConnection(ConnectionString))
+                    using (var command = new OdbcCommand(sql, connection))
+                    {
+                        ConvertToCsv(connection, command);
+                    }
+                    break;
             }
         }
 
@@ -175,17 +184,14 @@ namespace Wexflow.Tasks.SqlToCsv
         {
             conn.Open();
             var reader = comm.ExecuteReader();
+            string destPath = Path.Combine(Workflow.WorkflowTempFolder, string.Format("SqlToCsv_{0:yyyy-MM-dd-HH-mm-ss-fff}.csv", DateTime.Now));
 
-            string destPath = Path.Combine(Workflow.WorkflowTempFolder,
-                                               string.Format("SqlToCsv_{0:yyyy-MM-dd-HH-mm-ss-fff}.csv",
-                                               DateTime.Now));
             using (var sw = new StreamWriter(destPath))
             {
                 bool hasRows = reader.HasRows;
 
                 while (hasRows)
                 {
-                    var i = 0;
                     List<string> columns = new List<string>();
                     List<string> values = new List<string>();
                     bool readColumns = false;
@@ -208,6 +214,8 @@ namespace Wexflow.Tasks.SqlToCsv
                             sw.Write(EndOfLine);
                             values.Clear();
                         }
+
+                        int i;
                         if (!readColumns)
                         {
                             for (i = 0; i < reader.FieldCount; i++)
@@ -236,8 +244,16 @@ namespace Wexflow.Tasks.SqlToCsv
                     hasRows = reader.NextResult();
                 }
             }
-            Files.Add(new FileInf(destPath, Id));
-            InfoFormat("CSV file generated: {0}", destPath);
+
+            if (!reader.HasRows && DoNotGenerateFilesIfEmpty)
+            {
+                InfoFormat("No file was generated because the result set is empty.");
+            }
+            else
+            {
+                Files.Add(new FileInf(destPath, Id));
+                InfoFormat("CSV file generated: {0}", destPath);
+            }
 
         }
     }

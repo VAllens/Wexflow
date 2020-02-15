@@ -17,26 +17,27 @@
     };
 
     function sendEmail() {
-        Common.get(uri + "/user?username=" + encodeURIComponent(txtUsername.value), function (u) {
+        btnSubmit.disabled = true;
 
-            if (typeof u === "undefined" || u === null) {
-                alert("The user " + txtUsername.value + " does not exist.");
+        var username = txtUsername.value;
+
+        if (username === "") {
+            Common.toastInfo("Enter a username.");
+            btnSubmit.disabled = false;
+            return;
+        }
+
+        Common.post(uri + "/resetPassword?u=" + encodeURIComponent(username), function (val) {
+            if (val === true) {
+                Common.toastSuccess("An email with a new password was sent to: " + username);
+                setTimeout(function () {
+                    Common.redirectToLoginPage();
+                }, 5000);
             } else {
-                var email = u.Email;
-                if (email === "" || email === null || typeof email === "undefined") {
-                    alert("The user " + txtUsername.value + " does not have an email.");
-                } else {
-                    Common.post(uri + "/resetPassword?username=" + encodeURIComponent(u.Username) + "&email=" + encodeURIComponent(email), function (val) {
-                        if (val === true) {
-                            alert("An email with a new password was sent to: " + u.Email);
-                            Common.redirectToLoginPage();
-                        } else {
-                            alert("An error occured while sending the email.");
-                        }
-                    });
-                }
+                Common.toastError("An error occured while sending the email.");
+                btnSubmit.disabled = false;
             }
-
         });
     }
+
 }

@@ -12,7 +12,7 @@
         return string;
     },
 
-    get: function (url, callback, errorCallback) {
+    get: function (url, callback, errorCallback, auth) {
         var xmlhttp = new XMLHttpRequest();
         xmlhttp.onreadystatechange = function () {
             if (this.readyState === 4 && this.status === 200 && callback) {
@@ -28,10 +28,11 @@
             if (errorCallback) errorCallback();
         };
         xmlhttp.open("GET", url, true);
+        if (auth) xmlhttp.setRequestHeader("Authorization", auth);
         xmlhttp.send();
     },
 
-    post: function (url, callback, errorCallback, json) {
+    post: function (url, callback, errorCallback, json, auth) {
         var xmlhttp = new XMLHttpRequest();
         xmlhttp.onreadystatechange = function () {
             if (this.readyState === 4 && this.status === 200 && callback) {
@@ -48,6 +49,7 @@
         };
         xmlhttp.open("POST", url, true);
         //xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        if (auth) xmlhttp.setRequestHeader("Authorization", auth);
         xmlhttp.send(JSON.stringify(json));
     },
 
@@ -79,10 +81,12 @@
                 return "<img src='images/failed-small.png' /> Failed";
             case 4:
                 return "<img src='images/warning-small.png' /> Warning";
-            case 5:
-                return "<img src='images/disabled-small.png' /> Disabled";
+            //case 5:
+            //    return "<img src='images/disabled-small.png' /> Disabled";
             case 6:
                 return "<img src='images/stopped-small.png' /> Stopped";
+            case 7:
+                return "<img src='images/disapproved-small.png' /> Rejected";
             default:
                 return "";
         }
@@ -93,9 +97,8 @@
     },
 
     formatDate: function (d) {
-        return ("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" +
-            d.getFullYear() + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2) + ":" + ("0" + d.getSeconds()).slice(-2);
-
+        return ("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + d.getFullYear()
+            + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2) + ":" + ("0" + d.getSeconds()).slice(-2);
     },
 
     os: function () {
@@ -110,6 +113,41 @@
         if (window.navigator.userAgent.indexOf("X11") !== -1) osName = "UNIX";
         if (window.navigator.userAgent.indexOf("Linux") !== -1) osName = "Linux";
         return osName;
+    },
+
+    toastInfo: function (msg) {
+        $.toast({
+            heading: 'Information',
+            text: msg,
+            hideAfter: 5000,
+            icon: 'info'
+        });
+    },
+
+    toastSuccess: function (msg) {
+        $.toast({
+            heading: 'Success',
+            text: msg,
+            hideAfter: 5000,
+            icon: 'success'
+        });
+    },
+
+    toastError: function (msg) {
+        $.toast({
+            heading: 'Error',
+            text: msg,
+            hideAfter: 5000,
+            icon: 'error'
+        });
+    },
+
+    escape: function (str) {
+        return str.replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&apos;');
     }
 
 };

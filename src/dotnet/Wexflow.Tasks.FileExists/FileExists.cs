@@ -26,11 +26,11 @@ namespace Wexflow.Tasks.FileExists
 
                 if (success)
                 {
-                    InfoFormat("The file {0} exists.", File);
+                    InfoFormat("The file {0} exist.", File);
                 }
                 else
                 {
-                    InfoFormat("The file {0} does not exists.", File);
+                    InfoFormat("The file {0} does not exist.", File);
                 }
 
             }
